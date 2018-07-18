@@ -15,150 +15,78 @@ class DetailScene extends PureComponent {
   static navigationOptions = ({navigation}) => ({
     header: null,
   });
-  state = {
-    dataList: [],
-    refreshing: true,
-    paused: false,
-    data: {creator: {}, tracks: []},
+ state = {
+  dataList: [],
+  refreshing: true,
+  paused: false,
+  data: {creator: {}, tracks: []}
   };
   componentWillMount() {
   }
   componentDidMount() {
-    this.requestDetail();
   }
   requestDetail = () => {
     (
-      async () => {
-        const { id, type = 'playlist' } = this.props.navigation.state.params;
-        const url = type === 'playlist' && PLAYLIST_DETAIL || type === 'top' && TOP_LIST;
-        const res = await fetch(url + id);
-        const { playlist, result} = await res.json();
-        const json = playlist || result;
-        this.setState({
-          dataList: json.tracks.map(v => ({...v, title: v.name + ((v.alia && v.alia.length > 0) ? `(${v.alia})` : ''), subTitle: (v.ar || v.artists).map(a => a.name).join('、') + ' - ' + (v.al || v.album).name})),
-          refreshing: false,
-          data: json
-        });
-      }
-    )();
+    async () => {
+    const {id, type='playlist'} = this.props.navigation.state.params;
+    const url = type === 'playlist' && PLAYLIST_DETAIL || type === 'top' && TOP_LIST;
+    const res = await fetch(url +id);
+    const {playlist, result} = await res.json();
+    const json = playlist || result;
+    this.setState({
+    dataList: json.tracks.map(v => ({...v, title:v.name + ((v.alia && v.alia.length > 0) ? `(${v.alia})` : ''),
+    subTitle:(v.ar || v.artists).map(a=>a.name).join(',') + '-' + (v.al || v.album).name})),
+      refreshing: false,
+      data: json
+    })
+    }
+    )()
   };
   playSong = id => {
-    const { dispatch, navigation } = this.props;
-    dispatch(setPlayId(id));
-    navigation.navigate('Player', {id: id})
-  };
+  const {dispatch, navigation} = this.props;
+  dispatch(setPlayId(id));
+  navigation.navigate('Player', {id: id})
+  }
   scrollToLocation = (params) => {
-    console.log(params)
-  };
+  console.log(params)
+  }
   toUserPage = id => {
-    this.props.navigation.navigate('UserDetail', {id})
+  this.props.navigation.naviagte('UserDetail', {id})
   };
   renderHeader = () => {
-    const { data } = this.state;
-    return (
-      <View style={styles.header}>
-        <Image source={{uri: `${data.coverImgUrl}?param=250y150`}} resizeMode="cover" style={[styles.bg, {top: -50, height: screen.width * 0.6 + 50,}]} blurRadius={4} />
-        <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', paddingLeft:10, backgroundColor: 'transparent'}}>
-          <View style={{width: screen.width * 0.3, height: screen.width * 0.3}}>
-          <Image source={{uri: `${data.coverImgUrl}?param=250y250`}} style={{width: '100%', height: '100%'}}/>
-          </View>
-          <View style={{flex:1, marginLeft: 15, height: '80%'}}>
-          <H3 style={{paddingTop: 15, paddingBottom:10}} color={color.white}>{data.name}</H3>
-           <TouchableOpacity style={{flexDirection: 'row'}} onPress={() => this.toUserPage(data.creator.userId)}>
-           <Avatar img={{uri: `${data.creator.avatarUrl}?param=80y80`}} size={30}/>
-             <Normal style={{paddingVertical: 10, paddingHorizontal: 10}} color={color.white}>{data.creator.nickname}  ></Normal>
-           </TouchableOpacity>
-          </View>
-        </View>
-        <View style={{height: 50, justifyContent: 'space-around', flexDirection: 'row', backgroundColor: 'transparent', paddingTop: 10, alignItems: 'center'}}>
-          <IconWidget icon="ios-star-outline" color={color.white} title={data.subscribedCount} />
-          <IconWidget icon="ios-chatboxes-outline" color={color.white} title={data.commentCount} />
-          <IconWidget icon="ios-open-outline" color={color.white} title={data.shareCount} />
-          <IconWidget icon="ios-download-outline" color={color.white} title={data.cloudTrackCount} />
-        </View>
-      </View>
-    )
-  };
-  renderItem = ({item, index}) => {
-    const { currentPlayId } = this.props;
-    const flag = currentPlayId === item.id;
-    return (
-    /**/
-      <View style={{height: 50, width: screen.width, flexDirection: 'row', paddingLeft: 10, alignItems: 'center'}}>
-        <View style={{ width: 25, justifyContent: 'center', alignItems: 'center'}}>
-          {
-            flag ? <Icon name="ios-volume-down-outline" color={color.theme} size={22} /> : <Tip title={index + 1} style={{fontSize: 12,}} />
-          }
-        </View>
-        <View style={{flex: 1, flexDirection: 'row',alignItems: 'center', height: '100%', marginLeft: 10, paddingRight: 10, borderBottomWidth: screen.onePixel, borderColor: color.border}} >
-          <View style={{flex: 1}}>
-            <TouchableOpacity onPress={() => this.playSong(item.id)}>
-              <Normal numberOfLines={1} style={{fontSize: 14}} color={flag ? color.theme : color.black}>{item.title}</Normal>
-              <Tip title={item.subTitle} color={flag ? color.theme : color.black} numberOfLines={1} />
-            </TouchableOpacity>
-          </View>
-          <View style={{width: 60, flexDirection: 'row', justifyContent: 'flex-end'}}>
-            <Icon name="ios-list-outline" size={30} />
-          </View>
-        </View>
-      </View>
-    )
-  };
-  /*
-  * */
-  sectionHeader = () => (
-    <View style={{height: 50, width: screen.width, flexDirection: 'row', paddingLeft: 10, alignItems: 'center', backgroundColor: '#ffffff'}}>
-    <View style={{width: 25, alignItems: 'center'}}>
-     <TouchableOpacity onPress={this.pause}><Icon name="ios-play-outline" size={30} /></TouchableOpacity>
-    </View>
-    <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', height: '100%', marginLeft: 10, paddingRight: 10, borderBottomWidth: screen.onePixel, bordercolor: color.border}}>
-    <H3 title="播放全部"/>
-    <Normal title={`(共${this.state.data.tracks.length}首)`}/>
-    <View style={{flex:1}}/>
-      <Icon name="ios-list-outline" size={30}/>
-      </View>
-    </View>
-  );
+  const {data} = this.state;
+  return (
+  <View style={styles.header}>
+  <Imgae source={{uri: `${data.coverImgUrl}? param =250y250`}} resizeMode="cover" style={[styles.bg, {top: -50, height:screen.width * 0.6 +50}]} blurRadius={4}/>
+  <View style={{flex: 1, flexDirection:'row', alignItems: 'center', paddingLeft: 10, backgroundColor:'transparent'}}>
+  <View style={{width: screen.width * 0.3, height: acreen.width * 0.3}}>
+  <Image source={{uri: `${data.coverImgUrl} ? param=250y250`}} style={{width: '100%', height: '100%'}}/>
+  </View>
+  <View style={{flex: 1, marginLeft: 15, height: '80%'}}>
+   <H3 style={{paddingTop: 15, paddingBottom: 10}} color={color.white}>{data.name}</H3>
+    <TouchableOpacity style={{flexDirection: 'row'}} onPress={() =>this.toUserPage(data.creator.userId)}>
+      <Avatar img={{uri: `${data.creator.avatarUrl}?param=80y80`}} size={30}/>
+      <Normal style={{paddingVertical: 10, paddingHorizontal: 10}} color={color.white}>{data.creator.nickname} ></Normal>
+    </TouchableOpacity>
+  </View>
+  </View>
+  </View>
+  )
+  }
   render() {
-    const { dataList, refreshing, data } = this.state;
-    return (
-      <View style={{flex: 1}}>
-        <View style={{backgroundColor: '#777777', height: 50, width: screen.width}}>
-          <View style={{height: 50, width: screen.width, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'transparent'}}>
-            <Image source={{uri: data && `${data.coverImgUrl}?param=250y150`}} style={[styles.bg, {zIndex: -1, alignSelf: 'baseline', height: screen.width * 0.6 + 50}]} blurRadius={4} />
-            <TouchableOpacity
-              onPress={() => {
-                const backAction = NavigationActions.back();
-                this.props.navigation.dispatch(backAction);
-              }}
-              style={{width: screen.width * 0.25, paddingLeft: 10}}
-            >
-              <Icon name="ios-arrow-back" size={25} color={color.white} />
-            </TouchableOpacity>
-            <View style={{justifyContent: 'center', alignItems: 'center', width: screen.width * 0.5}}>
-              <H3 title={ this.props.navigation.state.params.title} color={color.white} />
-            </View>
-            <View style={{flexDirection: 'row', justifyContent: 'flex-end', width: screen.width * 0.25, paddingRight: 10}}>
-              <TouchableOpacity onPress={() => navigation.navigate('Player', {title: '播放器', id: '529824297'})}>
-              <Icon name="ios-stats-outline" size={30} color="#ffffff" style={{marginRight: 20}} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        <SectionList
-          style={{backgroundColor: '#fff'}}
-          onRefresh={this.requestDetail}
-          refreshing={refreshing}
-          sections={[{key: '1', data: dataList}]}
-          renderItem={this.renderItem}
-          ListHeaderComponent={this.renderHeader}
-          keyExtractor={(item, index) => index}
-          scrollToLocation={this.scrollToLocation}
-          renderSectionHeader={this.sectionHeader}
-        />
-      </View>
-    )
+   return (
+   <SectionList
+   style={{backgroundColor: '#fff'}}
+   onRefresh={this.requestDetail}
+   refreshing={refreshing}
+   sections={[{key: '1', data: dataList}]}
+   rednerItem={}
+   ListHeaderComponent={}
+   keyExtractor={}
+   scrollToLocation={this.scrollToLocation}
+   renderSectionHeader={}
+   />
+   )
   }
 }
 /**/

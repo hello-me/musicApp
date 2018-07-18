@@ -1,6 +1,4 @@
-/**
- *
- */
+
 export const transTime = (time) => {
     const minute = Math.floor(time / 60);
     const second = Math.floor(time % 60);
